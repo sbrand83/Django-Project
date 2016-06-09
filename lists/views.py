@@ -6,10 +6,12 @@ from lists.models import Item
 
 
 def home_page(request):
-    item = Item()
-    item.text = request.POST.get('item_text', '')
-    item.save()
+    if request.method == 'POST':
+        new_text_item = request.POST['item_text']
+        Item.objects.create(text=new_text_item)
+    else:
+        new_text_item = ''
 
     return render(request, 'home.html', {
-        'new_item_text': item.text
+        'new_item_text': new_text_item
     })
