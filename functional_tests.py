@@ -13,6 +13,11 @@ class NewVisitorTest(unittest.TestCase):
         self.browser.quit()
         pass
 
+    def check_for_row_in_list_table(self, row_text):
+        table = self.browser.find_element_by_id('id_list_table')
+        rows = table.find_elements_by_tag_name('tr')
+        self.assertIn(row_text, [row.text for row in rows])
+
     def test_can_start_a_list_and_retrieve_it_later(self):
         # Stefan heard about a cool new online to-do app. He goes to check out its homepage
         self.browser.get('http://localhost:8000')
@@ -32,9 +37,7 @@ class NewVisitorTest(unittest.TestCase):
         # When he hits enter, the page updates, and now the page lists "1: Go to the store" as an item in a to-do list
         inputbox.send_keys(Keys.ENTER)
 
-        table = self.browser.find_element_by_id('id_list_table')
-        rows = table.find_elements_by_tag_name('tr')
-        self.assertIn('1: Go to the store', [row.text for row in rows])
+        self.check_for_row_in_list_table('1: Go to the store')
 
         # There is still a text box inviting him to add another item. He enters "Buy apples"
         inputbox = self.browser.find_element_by_id('id_new_item')
@@ -42,10 +45,8 @@ class NewVisitorTest(unittest.TestCase):
         inputbox.send_keys(Keys.ENTER)
 
         # The page updates again, and now shows both items on her list
-        table = self.browser.find_element_by_id('id_list_table')
-        rows = table.find_elements_by_tag_name('tr')
-        self.assertIn('1: Go to the store', [row.text for row in rows])
-        self.assertIn('2: Buy apples', [row.text for row in rows])
+        self.check_for_row_in_list_table('1: Go to the store')
+        self.check_for_row_in_list_table('2: Buy apples')
 
         # The site has generated a unique URL for him
         self.fail('Finish the tests!!!!!')
