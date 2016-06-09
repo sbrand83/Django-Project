@@ -25,6 +25,12 @@ class HomePageTest(TestCase):
 
         response = home_page(request)
 
+        # checks the database for the new saved item
+        self.assertEqual(Item.objects.all().count(), 1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, 'A new list item')
+
+        # checks the response html contains this new item
         self.assertIn('A new list item', response.content.decode())
         expected_html = render_to_string('home.html',
                                          {'new_item_text': 'A new list item'})
