@@ -35,9 +35,11 @@ class NewVisitorTest(LiveServerTestCase):
         # He types "Go to the store" into a text box
         inputbox.send_keys('Go to the store')
 
-        # When he hits enter, the page updates, and now the page lists "1: Go to the store" as an item in a to-do list
+        # When he hits enter, he is taken to a new URL, and now the page lists
+        # "1: Go to the store" as an item in a to-do list
         inputbox.send_keys(Keys.ENTER)
-
+        stefan_list_url = self.browser.current_url
+        self.assertRegex(stefan_list_url, '/lists/.+')
         self.check_for_row_in_list_table('1: Go to the store')
 
         # There is still a text box inviting him to add another item. He enters "Buy apples"
@@ -49,9 +51,32 @@ class NewVisitorTest(LiveServerTestCase):
         self.check_for_row_in_list_table('1: Go to the store')
         self.check_for_row_in_list_table('2: Buy apples')
 
-        # The site has generated a unique URL for him
-        self.fail('Finish the tests!!!!!')
+        # Now a new user, Bob, comes along to the site
 
-        # He visits that URL - the to-do list is still there
+        # We use a new browser session to make sure that no information
+        # of Stefan's is coming through from cookies, etc.
 
-        # The end
+        self.browser.quit()
+        self.browser = webdriver.Firefox()
+
+        # Bob visits the home page.  There is no sign of Stefan's list
+        self.browser.get(self.live_server_url)
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Go the the store', page_text)
+        self.assertNotIn('But apples', page_text)
+
+        # Bob starts a new list by entering a new item
+        inputbox = self.browser.find_element_by_id('id_new item')
+        inputbox.send_keys('Buy milk')
+        inputbox.send_keys(Keys.ENTER)
+
+        # Bob gets his own unique URL
+        bob_list_url = self.browser.current_url
+        self.assertRegex(bob_list_url, '/lists/.+')
+        self.assertNotEqual(bob_list_url, stefan_list_url)
+
+        # Again, no trace of Stefan's list
+        bob_page_text = self.browser.find_element_by_tag_name('body')
+        self.assertNotIn('Go to the store', bob_page_text)
+        self.assertNotIn('Buy apples', bob_page_text)
+        self.assertIn('Buy milk', bob_page_text)
